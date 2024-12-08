@@ -23,7 +23,7 @@ class RegistrationPage:
         left_frame = create_left_panel(
             registration_page,
             "Register Now",
-            "D:/advanced-python/app/assets/register.png",
+            "app/assets/register.png",
             "Secure and easy banking experience.\nRegister now to explore more features.",
         )
 
