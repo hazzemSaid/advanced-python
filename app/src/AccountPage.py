@@ -13,7 +13,7 @@ class AccountPage:
     def __init__(self, root):
         self.root = root
         self.account_frame = None
-        self.user = None 
+        self.user = None
 
     def set_user(self, user):
         self.user = user
