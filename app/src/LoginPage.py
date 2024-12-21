@@ -136,19 +136,19 @@ class LoginPage:
             # In a real application, you would fetch this from a database
             # user = User(name=username, phone_number="N/A", address="N/A", gender=Gender.Male, user_id=1)
             userAccount= c.execute("SELECT * FROM Account WHERE acc_user_name = ? AND acc_password = ?", (username, password))
+
             userAccount = userAccount.fetchone()
-            user = c.execute("SELECT * FROM User WHERE user_id = ?", (userAccount[1],))
-            user = user.fetchone()
-            user_obj = User(user[1], user[2], user[3], user[0], user[4])
             # print(userAccount)
             # print(user)
-            if user is None:
+            if userAccount is None:
                 messagebox.showerror("Login Error", "Invalid username or password")
             else:
+                user = c.execute("SELECT * FROM User WHERE user_id = ?", (userAccount[1],))
+                user = user.fetchone()
+                user_obj = User(user[1], user[2], user[3], user[0], user[4])
                 messagebox.showinfo("Login", "Login Successful!")
                 self.switch_to_account(user_obj)
                 self.destroy()
-            
 
     def destroy(self):
         """Destroy the login frame if it exists"""
