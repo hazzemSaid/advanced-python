@@ -40,11 +40,11 @@ class Account:
     def deposit(self, amount: float) -> None:
         if amount <= 0:
             raise ValueError("Deposit amount must be greater than zero.")
-        self._balance += amount
+        self.__balance += amount
 
     def withdraw(self, amount: float) -> None:
         if amount <= 0:
             raise ValueError("Withdrawal amount must be greater than zero.")
-        if amount > self._balance:
+        if amount > self.__balance:
             raise ValueError("Insufficient funds.")
-        self._balance -= amount
+        self.__balance -= amount
