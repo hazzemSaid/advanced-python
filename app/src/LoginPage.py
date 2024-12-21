@@ -2,11 +2,16 @@ import tkinter as tk
 from tkinter import messagebox
 from utils import PlaceholderEntry, create_left_panel
 
+from classes.User import User, Gender
+import sqlite3
+con = sqlite3.connect('app/database/project.db')
+c = con.cursor()
 
 class LoginPage:
-    def __init__(self, root, switch_to_registration):
+    def __init__(self, root, switch_to_registration, switch_to_account):
         self.root = root
         self.switch_to_registration = switch_to_registration
+        self.switch_to_account = switch_to_account
         self.login_frame = None
         self.login_entries = {}
 
@@ -21,7 +26,7 @@ class LoginPage:
         left_frame = create_left_panel(
             login_page,
             "Welcome Back",
-            "./assets/register.png",
+            "app/assets/register.png",
             "Secure and easy banking experience.\nRegister now to explore more features.",
         )
 
@@ -118,17 +123,32 @@ class LoginPage:
         # Basic validation checks
         errors = []
         if not username or username == "Username/Email":
-            errors.append("Username/Email is required")
+            errors.append("Username is required")
 
         if not password or password == "Password":
             errors.append("Password is required")
 
-        # Display errors or proceed
         if errors:
             error_message = "\n".join(errors)
             messagebox.showerror("Login Error", error_message)
         else:
-            messagebox.showinfo("Login", "Login Successful!")
+            # Create a user object for the logged-in user
+            # In a real application, you would fetch this from a database
+            # user = User(name=username, phone_number="N/A", address="N/A", gender=Gender.Male, user_id=1)
+            userAccount= c.execute("SELECT * FROM Account WHERE acc_user_name = ? AND acc_password = ?", (username, password))
+            userAccount = userAccount.fetchone()
+            user = c.execute("SELECT * FROM User WHERE user_id = ?", (userAccount[1],))
+            user = user.fetchone()
+            user_obj = User(user[1], user[2], user[3], user[0], user[4])
+            # print(userAccount)
+            # print(user)
+            if user is None:
+                messagebox.showerror("Login Error", "Invalid username or password")
+            else:
+                messagebox.showinfo("Login", "Login Successful!")
+                self.switch_to_account(user_obj)
+                self.destroy()
+            
 
     def destroy(self):
         """Destroy the login frame if it exists"""

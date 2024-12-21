@@ -1,13 +1,18 @@
 import tkinter as tk
 from tkinter import messagebox
 import re
+from classes.Account import Account
+from classes.User import User, Gender
 from utils import PlaceholderEntry, create_left_panel
-
+import sqlite3
+con = sqlite3.connect('app/database/project.db')
+c = con.cursor()
 
 class RegistrationPage:
-    def __init__(self, root, switch_to_login):
+    def __init__(self, root, switch_to_login, switch_to_account):
         self.root = root
         self.switch_to_login = switch_to_login
+        self.switch_to_account = switch_to_account
         self.registration_frame = None
         self.entries = {}
         self.agree_var = None
@@ -34,12 +39,11 @@ class RegistrationPage:
 
         title_label = tk.Label(
             right_frame,
-            text="Create Your Account",
-            fg="#1E1F47",
-            bg="#EEEEEE",
-            font=("Calibri", 18, "bold"),
+            text="Create Account",
+            font=("Helvetica", 16),
+            bg="#EEEEEE"
         )
-        title_label.grid(row=0, column=0, columnspan=2, pady=20)
+        title_label.grid(row=0, column=0, pady=20)
 
         # Registration Fields
         reg_fields = [
@@ -51,23 +55,30 @@ class RegistrationPage:
             ("Confirm Password", "Confirm Password"),
         ]
         entries = {}
-
+        
         # Place fields using grid
-        for idx, (field, placeholder) in enumerate(reg_fields):
+        for idx, (label_text, placeholder) in enumerate(reg_fields):
             label = tk.Label(
                 right_frame,
-                text=field,
-                fg="#1E1F47",
-                bg="#EEEEEE",
+                text=label_text,
                 font=("Calibri", 12),
+                bg="#EEEEEE"
             )
             label.grid(row=idx + 1, column=0, padx=(40, 10), pady=10, sticky="w")
 
-            entry = PlaceholderEntry(
-                right_frame,
-                font=("Calibri", 12),
-                placeholder=placeholder,
-            )
+            if placeholder in ["Password", "Confirm Password"]:
+                entry = PlaceholderEntry(
+                    right_frame,
+                    font=("Calibri", 12),
+                    placeholder=placeholder,
+                    show="*"
+                )
+            else:
+                entry = PlaceholderEntry(
+                    right_frame,
+                    font=("Calibri", 12),
+                    placeholder=placeholder
+                )
 
             entry.grid(row=idx + 1, column=1, padx=(0, 40), pady=10, sticky="ew")
             entries[placeholder] = entry
@@ -80,20 +91,10 @@ class RegistrationPage:
             right_frame,
             text="I agree to the Terms & Conditions",
             variable=agree_var,
-            onvalue=1,
-            offvalue=0,
             bg="#EEEEEE",
-            fg="#1E1F47",
-            font=("Calibri", 10),
+            font=("Calibri", 12)
         )
-        terms_check.grid(
-            row=len(reg_fields) + 1,
-            column=0,
-            columnspan=2,
-            padx=40,
-            pady=10,
-            sticky="w",
-        )
+        terms_check.grid(row=len(reg_fields) + 1, column=0, columnspan=2, pady=10)
 
         # Register Button
         register_button = tk.Button(
@@ -139,6 +140,7 @@ class RegistrationPage:
     def validate_registration(self):
         """Validate registration form inputs"""
         # Basic validation example
+
         name = self.entries["Name"].get()
         username = self.entries["Username"].get()
         email = self.entries["Email"].get()
@@ -181,8 +183,45 @@ class RegistrationPage:
             messagebox.showerror("Registration Error", error_message)
         else:
             messagebox.showinfo("Registration", "Registration Successful!")
+            user = User(name=name, phone_number=phone, address="Ismailia", gender=Gender.Male, user_id=1)
+            c.execute("INSERT INTO User ( Name, Phone, Gender, Address) VALUES ( ?, ?, ?, ?)", ( user.get_name(), user.get_phone_number(), user.get_gender(), user.get_address()))
+            account = Account(username=username, password=password, user_id=c.lastrowid, card_number=123456789, pin=1234, balance=1000.0)
+            c.execute("INSERT INTO Account ( user_acc_ID, acc_user_name, acc_password, pin, balance) VALUES ( ?, ?, ?, ?, ?)", ( account.get_user_id(), account.get_username(), account.get_password(), account.get_pin(), account.get_balance()))
+            con.commit()
+            # Destroy registration page before switching
+            self.destroy()
+            # Switch to account page
+            self.switch_to_account(user)
 
     def destroy(self):
         """Destroy the registration frame if it exists"""
         if self.registration_frame:
             self.registration_frame.destroy()
+
+class PlaceholderEntry(tk.Entry):
+    def __init__(self, master=None, placeholder="PLACEHOLDER", show=None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.placeholder = placeholder
+        self.show_char = show
+        self.default_show = self.cget('show')
+        self.placeholder_color = 'grey'
+        self.default_fg_color = self.cget("fg")
+        
+        self.bind("<FocusIn>", self._clear_placeholder)
+        self.bind("<FocusOut>", self._add_placeholder)
+        
+        self._add_placeholder()
+
+    def _clear_placeholder(self, event=None):
+        if self.get() == self.placeholder and self.cget("fg") == self.placeholder_color:
+            self.delete(0, tk.END)
+            self.config(fg=self.default_fg_color)
+            if self.show_char:
+                self.config(show=self.show_char)
+
+    def _add_placeholder(self, event=None):
+        if not self.get():
+            self.config(fg=self.placeholder_color)
+            self.insert(0, self.placeholder)
+            if self.show_char:
+                self.config(show=self.default_show)

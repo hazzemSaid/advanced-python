@@ -1,6 +1,7 @@
 import tkinter as tk
-from registration import RegistrationPage
-from login import LoginPage
+from RegistrationPage import RegistrationPage
+from LoginPage import LoginPage
+from AccountPage import AccountPage
 
 
 class BankSystemApp:
@@ -12,8 +13,9 @@ class BankSystemApp:
         self.root.resizable(False, False)
 
         # Create page instances
-        self.registration_page = RegistrationPage(self.root, self.switch_to_login)
-        self.login_page = LoginPage(self.root, self.switch_to_registration)
+        self.account_page = AccountPage(self.root)
+        self.registration_page = RegistrationPage(self.root, self.switch_to_login, self.switch_to_account)
+        self.login_page = LoginPage(self.root, self.switch_to_registration, self.switch_to_account)
 
         # Start with registration page
         self.registration_page.create_page()
@@ -31,3 +33,13 @@ class BankSystemApp:
         self.login_page.destroy()
         # Create registration page
         self.registration_page.create_page()
+
+    def switch_to_account(self, user=None):
+        """Switch to account page"""
+        # Destroy login page if it exists
+        self.login_page.destroy()
+        # Set user information
+        if user:
+            self.account_page.set_user(user)
+        # Create account page
+        self.account_page.create_page()
